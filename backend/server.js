@@ -16,6 +16,8 @@ app.use(helmet());
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://mini-online-test-six.vercel.app",
+  "https://mini-online-test-i2insx6rn-prashant-kumars-projects-cf441b30.vercel.app",
   process.env.CLIENT_URL?.trim().replace(/\/+$/, "")
 ].filter(Boolean);
 
