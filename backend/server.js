@@ -14,8 +14,15 @@ const app = express();
 
 app.use(helmet());
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL?.trim().replace(/\/+$/, "")
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json({ limit: "100kb" }));
