@@ -12,6 +12,8 @@ import Test from "./pages/Test";
 import Result from "./pages/Result";
 import History from "./pages/History";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -34,6 +36,12 @@ export default function App() {
 
           <Route path="/history" element={<History />} />
 
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route
+            path="/admin"
+            element={<AdminDashboard />}
+          />
         </Route>
 
       </Routes>
