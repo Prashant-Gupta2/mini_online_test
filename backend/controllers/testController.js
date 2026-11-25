@@ -88,72 +88,51 @@ exports.saveAnswer = async (req, res) => {
 };
 exports.submitTest = async (req, res) => {
   try {
-    const attempt = await Attempt.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        userId: req.userId,
-        status: "in-progress"
-      },
-      [
-        {
-          $set: {
-            questions: {
-              $map: {
-                input: "$questions",
-                as: "q",
-                in: {
-                  $mergeObjects: [
-                    "$$q",
-                    {
-                      isCorrect: {
-                        $eq: [
-                          "$$q.selectedAnswer",
-                          "$$q.correctAnswer"
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            status: "submitted",
-            submittedAt: "$$NOW"
-          }
-        },
-        {
-          $set: {
-            score: {
-              $size: {
-                $filter: {
-                  input: "$questions",
-                  as: "q",
-                  cond: "$$q.isCorrect"
-                }
-              }
-            }
-          }
-        }
-      ],
-      { new: true }
-    );
+    const { id } = req.params;
 
-    const result = attempt || await Attempt.findOne({
-      _id: req.params.id,
-      userId: req.userId,
-      status: "submitted"
+    const attempt = await Attempt.findOne({
+      _id: id,
+      userId: req.userId
     });
 
-    if (!result) {
+    if (!attempt) {
       return res.status(404).json({
         message: "Attempt not found"
       });
     }
 
-    res.json(result);
+    // Prevent duplicate submission
+    if (attempt.status === "submitted") {
+      return res.status(200).json(attempt);
+    }
+
+    let score = 0;
+
+    // Calculate score
+    attempt.questions.forEach((question) => {
+      question.isCorrect =
+        question.selectedAnswer != null &&
+        question.selectedAnswer === question.correctAnswer;
+
+      if (question.isCorrect) {
+        score++;
+      }
+    });
+
+    attempt.score = score;
+    attempt.status = "submitted";
+    attempt.submittedAt = new Date();
+
+    await attempt.save();
+
+    return res.status(200).json(attempt);
 
   } catch (error) {
-    res.status(500).json({
-      message: "Submission failed"
+    console.error("SUBMIT TEST ERROR:", error);
+
+    return res.status(500).json({
+      message: "Submission failed",
+      error: error.message
     });
   }
 };
